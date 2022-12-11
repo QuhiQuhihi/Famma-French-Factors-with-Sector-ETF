@@ -55,9 +55,9 @@ class RawDataProc:
         mkt_data.index = pd.to_datetime(mkt_data.index)
         mkt_data.index = mkt_data.index.strftime('%Y%m')
 
-        # mkt_data.to_csv(os.path.join(self.data_dir,'sector_data.csv'))
+        mkt_data.to_csv(os.path.join(self.data_dir,'sector_data.csv'))
 
-        print(mkt_data)
+        # print(mkt_data)
         return mkt_data
 
     def _process_factor_data(self):
@@ -66,10 +66,13 @@ class RawDataProc:
         ff5_data = self.ff5_data.loc[: ' Annual Factors: January-December ']
         mom_data = self.mom_data.loc[:'Annual Factors:']
 
+        mom_data.rename(columns = {'Mom   ' : 'Mom'}, inplace = True)
+
         # ff5_data.index = pd.to_datetime(ff5_data.index)
         # mom_data.index = pd.to_datetime(mom_data.index)
 
         factor = pd.concat([ff5_data.iloc[:-1], mom_data.iloc[:-1]], axis=1)
+        factor.to_csv(os.path.join(self.data_dir,'factor_data.csv'))
 
         return factor
     
