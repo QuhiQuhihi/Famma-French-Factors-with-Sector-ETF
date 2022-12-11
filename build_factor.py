@@ -27,6 +27,8 @@ class FactorDecompose:
         self.years = ['2007','2008','2009','2010','2011','2011','2012','2013','2014','2015','2016','2017','2018','2019','2020','2021','2022']
         self.months = ['01','02','03','04','05','06','07','08','09','10','11','12']
 
+        self.factor_list = ['Mkt-RF', 'SMB','HML','RMW','CMA','Mom']
+
 
     
     def factor_ols(self, year, ticker, factors_list):
@@ -83,7 +85,7 @@ class FactorDecompose:
     
     def run(self):
         tickers = self.sectors.columns
-        factors_list = ['Mkt-RF', 'SMB','HML','RMW','CMA','Mom']
+        factors_list = self.factor_list
         df_column = ['id','ticker','year','Mkt-RF', 'SMB','HML','RMW','CMA','Mom']
 
         factor_results = pd.DataFrame(columns=df_column)
