@@ -1,0 +1,26 @@
+name: Research checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  offline-validation:
+    runs-on: ubuntu-latest
+    env:
+      OPENBLAS_NUM_THREADS: "1"
+      OMP_NUM_THREADS: "1"
+      MPLBACKEND: Agg
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run pytest -q
+      - run: uv run ruff check research tests
+      - run: uv run ruff format --check research tests
+      - run: uv run python -m research.check_artifacts
+      - name: Execute constructed mechanism chapters without vendor data
+        run: |
+          uv run python -m research.build_notebooks --only 01-return-alignment
+          uv run python -m research.build_notebooks --only 02-svd-geometry
+          uv run python -m research.build_notebooks --only 03-alpha-uncertainty

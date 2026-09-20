@@ -1,0 +1,286 @@
+{
+  "audit_date": "2026-09-20",
+  "original_commit": "3e275dca416327b8e708b3fdc50e788adf138389",
+  "original_backup_branch": "old",
+  "reference_commit": "1f565f6d7010274ff8feb333b9c05be11ba1dcfa",
+  "hash_scope": "SHA-256 of exact original Git blob bytes, before any newline conversion.",
+  "files": [
+    {
+      "path": ".gitignore",
+      "bytes": 2791,
+      "sha256": "83ce6603381bab24d3bd5cb2037392f718e3d51cce039cdfbfab25cfce88905a",
+      "disposition": "repair",
+      "reason": "Retain useful exclusions and add local instructions, archives, environments, and source caches.",
+      "recovery": "git show old:.gitignore"
+    },
+    {
+      "path": "LICENSE",
+      "bytes": 1075,
+      "sha256": "5b6ca14793565517d08ecedb67176b63ae06c4aaae0f17d429616b0f8178e2db",
+      "disposition": "retain",
+      "reason": "Preserve the original MIT license and copyright; source data have separate rights.",
+      "recovery": "git show old:LICENSE"
+    },
+    {
+      "path": "README.md",
+      "bytes": 95,
+      "sha256": "253364895fbe3de26653514723ffc6ca1ad8f5e77d613747441103fa243ced94",
+      "disposition": "replace",
+      "reason": "Replace the two-line introduction with a research question, evidence, and topic navigation.",
+      "recovery": "git show old:README.md"
+    },
+    {
+      "path": "build_factor.py",
+      "bytes": 4332,
+      "sha256": "ec701ce11ef400b2dc1cee963261f345a3f31e8c4bc7c96644a6bb73e0ecccdd",
+      "disposition": "replace",
+      "reason": "Use validated rolling regression, SVD diagnostics, and defined uncertainty; withdraw original expected-return claims.",
+      "recovery": "git show old:build_factor.py"
+    },
+    {
+      "path": "data/YYYY-MM-DD dir will be created.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "remove",
+      "reason": "Empty placeholder; no actual legacy observations are present.",
+      "recovery": "git show old:data/YYYY-MM-DD dir will be created.txt"
+    },
+    {
+      "path": "get_rawdata.py",
+      "bytes": 6742,
+      "sha256": "816a530fc1725d81bae4b0937ded264ffc7541ad89ad29ccd4195f3da38bf844",
+      "disposition": "replace",
+      "reason": "Use a pinned and validated acquisition workflow; retain original ticker provenance.",
+      "recovery": "git show old:get_rawdata.py"
+    },
+    {
+      "path": "proc_rawdata.py",
+      "bytes": 2805,
+      "sha256": "15ed06c153623e8d2e6d96c1b5eaa2890b96b52c1af634d868ed7293b2807125",
+      "disposition": "replace",
+      "reason": "Correct units, complete-month returns, session validation, and strict missingness handling.",
+      "recovery": "git show old:proc_rawdata.py"
+    },
+    {
+      "path": "visualize.ipynb",
+      "bytes": 1625059,
+      "sha256": "787783ac79d22d64240fa7dc701201f50e98d4a5b72c61efd11bf2187005c81a",
+      "disposition": "archive_and_replace",
+      "reason": "Preserve on old; replace unsupported saved coefficient charts with freshly executed empirical and tutorial reports.",
+      "recovery": "git show old:visualize.ipynb"
+    }
+  ],
+  "original_universe": [
+    "IYW",
+    "IYF",
+    "IYZ",
+    "IYH",
+    "IYE",
+    "IYK",
+    "IYG",
+    "IYJ",
+    "IDU",
+    "IYM",
+    "IYC",
+    "IBB",
+    "IGM",
+    "SOXX",
+    "IGV",
+    "IGN",
+    "IGE",
+    "IYT",
+    "IHI",
+    "ITA",
+    "IHF",
+    "IEO",
+    "ITB",
+    "IAT",
+    "IAI",
+    "IAK",
+    "IHE",
+    "IEZ"
+  ],
+  "primary_universe": [
+    "IYW",
+    "IYF",
+    "IYZ",
+    "IYH",
+    "IYE",
+    "IYK",
+    "IYJ",
+    "IDU",
+    "IYM",
+    "IYC"
+  ],
+  "selection": "Fixed broad-sector subset of the original issuer universe, specified in research/PROTOCOL.md before revised evaluation; selected survivors, not a point-in-time exhaustive panel.",
+  "ticker_dispositions": [
+    {
+      "ticker": "IYW",
+      "primary": true,
+      "disposition": "retain_in_core",
+      "reason": "Broad exposure retained in the prespecified ten-fund core; actual benchmark changes remain part of its fund history."
+    },
+    {
+      "ticker": "IYF",
+      "primary": true,
+      "disposition": "retain_in_core",
+      "reason": "Broad exposure retained in the prespecified ten-fund core; actual benchmark changes remain part of its fund history."
+    },
+    {
+      "ticker": "IYZ",
+      "primary": true,
+      "disposition": "retain_in_core",
+      "reason": "Broad exposure retained in the prespecified ten-fund core; actual benchmark changes remain part of its fund history."
+    },
+    {
+      "ticker": "IYH",
+      "primary": true,
+      "disposition": "retain_in_core",
+      "reason": "Broad exposure retained in the prespecified ten-fund core; actual benchmark changes remain part of its fund history."
+    },
+    {
+      "ticker": "IYE",
+      "primary": true,
+      "disposition": "retain_in_core",
+      "reason": "Broad exposure retained in the prespecified ten-fund core; actual benchmark changes remain part of its fund history."
+    },
+    {
+      "ticker": "IYK",
+      "primary": true,
+      "disposition": "retain_in_core",
+      "reason": "Broad exposure retained in the prespecified ten-fund core; actual benchmark changes remain part of its fund history."
+    },
+    {
+      "ticker": "IYG",
+      "primary": false,
+      "disposition": "exclude_from_primary_preserve_as_documented_extension",
+      "reason": "Overlapping financial-services sleeve; IYF supplies the broad primary financial exposure."
+    },
+    {
+      "ticker": "IYJ",
+      "primary": true,
+      "disposition": "retain_in_core",
+      "reason": "Broad exposure retained in the prespecified ten-fund core; actual benchmark changes remain part of its fund history."
+    },
+    {
+      "ticker": "IDU",
+      "primary": true,
+      "disposition": "retain_in_core",
+      "reason": "Broad exposure retained in the prespecified ten-fund core; actual benchmark changes remain part of its fund history."
+    },
+    {
+      "ticker": "IYM",
+      "primary": true,
+      "disposition": "retain_in_core",
+      "reason": "Broad exposure retained in the prespecified ten-fund core; actual benchmark changes remain part of its fund history."
+    },
+    {
+      "ticker": "IYC",
+      "primary": true,
+      "disposition": "retain_in_core",
+      "reason": "Broad exposure retained in the prespecified ten-fund core; actual benchmark changes remain part of its fund history."
+    },
+    {
+      "ticker": "IBB",
+      "primary": false,
+      "disposition": "exclude_from_primary_preserve_as_documented_extension",
+      "reason": "Biotechnology industry sleeve overlaps the broad health-care core."
+    },
+    {
+      "ticker": "IGM",
+      "primary": false,
+      "disposition": "exclude_from_primary_preserve_as_documented_extension",
+      "reason": "Expanded technology sleeve overlaps the primary technology exposure."
+    },
+    {
+      "ticker": "SOXX",
+      "primary": false,
+      "disposition": "exclude_from_primary_preserve_as_documented_extension",
+      "reason": "Semiconductor industry sleeve; a possible later within-technology comparison."
+    },
+    {
+      "ticker": "IGV",
+      "primary": false,
+      "disposition": "exclude_from_primary_preserve_as_documented_extension",
+      "reason": "Software industry sleeve; a possible later within-technology comparison."
+    },
+    {
+      "ticker": "IGN",
+      "primary": false,
+      "disposition": "exclude_from_primary_preserve_as_documented_extension",
+      "reason": "Mandate and ticker changed to IDGT in December 2023; do not silently splice as an unchanged networking ETF."
+    },
+    {
+      "ticker": "IGE",
+      "primary": false,
+      "disposition": "exclude_from_primary_preserve_as_documented_extension",
+      "reason": "Natural-resources sleeve overlaps multiple broad material and energy exposures."
+    },
+    {
+      "ticker": "IYT",
+      "primary": false,
+      "disposition": "exclude_from_primary_preserve_as_documented_extension",
+      "reason": "Transportation industry sleeve overlaps the broad industrial core."
+    },
+    {
+      "ticker": "IHI",
+      "primary": false,
+      "disposition": "exclude_from_primary_preserve_as_documented_extension",
+      "reason": "Medical-device industry sleeve overlaps the broad health-care core."
+    },
+    {
+      "ticker": "ITA",
+      "primary": false,
+      "disposition": "exclude_from_primary_preserve_as_documented_extension",
+      "reason": "Aerospace and defense industry sleeve overlaps the broad industrial core."
+    },
+    {
+      "ticker": "IHF",
+      "primary": false,
+      "disposition": "exclude_from_primary_preserve_as_documented_extension",
+      "reason": "Health-care providers industry sleeve overlaps the broad health-care core."
+    },
+    {
+      "ticker": "IEO",
+      "primary": false,
+      "disposition": "exclude_from_primary_preserve_as_documented_extension",
+      "reason": "Oil and gas exploration/production industry sleeve overlaps the broad energy core."
+    },
+    {
+      "ticker": "ITB",
+      "primary": false,
+      "disposition": "exclude_from_primary_preserve_as_documented_extension",
+      "reason": "Home-construction industry sleeve is a narrower cyclical exposure."
+    },
+    {
+      "ticker": "IAT",
+      "primary": false,
+      "disposition": "exclude_from_primary_preserve_as_documented_extension",
+      "reason": "Regional-bank industry sleeve overlaps the broad financial core."
+    },
+    {
+      "ticker": "IAI",
+      "primary": false,
+      "disposition": "exclude_from_primary_preserve_as_documented_extension",
+      "reason": "Broker/dealer and exchange industry sleeve overlaps the broad financial core."
+    },
+    {
+      "ticker": "IAK",
+      "primary": false,
+      "disposition": "exclude_from_primary_preserve_as_documented_extension",
+      "reason": "Insurance industry sleeve overlaps the broad financial core."
+    },
+    {
+      "ticker": "IHE",
+      "primary": false,
+      "disposition": "exclude_from_primary_preserve_as_documented_extension",
+      "reason": "Pharmaceutical industry sleeve overlaps the broad health-care core."
+    },
+    {
+      "ticker": "IEZ",
+      "primary": false,
+      "disposition": "exclude_from_primary_preserve_as_documented_extension",
+      "reason": "Oil-equipment and services industry sleeve overlaps the broad energy core."
+    }
+  ]
+}

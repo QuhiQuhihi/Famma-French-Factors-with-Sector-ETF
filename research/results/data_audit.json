@@ -1,0 +1,31 @@
+{
+  "price_rows_per_etf": 4945,
+  "etfs": 10,
+  "monthly_observations": 235,
+  "first_month": "2007-01",
+  "last_month": "2026-07",
+  "missing_prices": 0,
+  "duplicate_price_dates": 0,
+  "missing_factors": 0,
+  "ff5_source_last_month": "2026-07",
+  "momentum_source_last_month": "2026-07",
+  "min_monthly_simple_return": -0.3585857897363661,
+  "max_monthly_simple_return": 0.30894845466752585,
+  "zero_daily_changes": {
+    "IYW": 20,
+    "IYF": 43,
+    "IYZ": 73,
+    "IYH": 24,
+    "IYE": 37,
+    "IYK": 35,
+    "IYJ": 23,
+    "IDU": 23,
+    "IYM": 16,
+    "IYC": 22
+  },
+  "min_rf_monthly_decimal": 0.0,
+  "max_rf_monthly_decimal": 0.0048,
+  "units": "decimal arithmetic monthly returns; ETF excess = simple return minus RF",
+  "fills": 0,
+  "coverage_exclusions_within_core": 0
+}

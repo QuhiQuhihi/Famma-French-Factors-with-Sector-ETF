@@ -1,0 +1,33 @@
+{
+  "source_and_code": {
+    "research/__init__.py": "b5e5d4112a1e58732dd568f750983251ab5d16726b87257b0b8cc68af6c4995e",
+    "research/acquire.py": "e96b11c38b4b20905396ac11175e982bdf0631f4c27c98d72665c1b00defc6c0",
+    "research/build_notebooks.py": "118a09ec47169db12f161c11d4e3b94584e2bbe9c4b66336fad87f505410b022",
+    "research/check_artifacts.py": "b9a7c87d3bcdba8b512dce79164bdef084638e6c555a8b0a10d85952dbfd4c19",
+    "research/data.py": "e936641ccd70005834b91abc4fa96f37c0526464428d05e24e9a98d7240723f2",
+    "research/models.py": "e572495cbc9c60f48a18491e236d295a2fbbf5de17d7d348304c73ddf3998ee6",
+    "research/run_study.py": "48e272f766fd1451c6d096f0c50b6d484a683de6c7d1121df6c5afa312b4ac9b",
+    "research/topic_notebooks.py": "b5f4802263ce08cd1bca0eae87a26aeb23fa0fab28882d593f8f1a5c71226bec",
+    "research/input_manifest.json": "7a0c36838a9d0dbf57e0a91aabd8baf2111b62b4eb0ae87e587684fd93964709",
+    "research/results/run_metadata.json": "ac415fcea647d69616fd485d1090df9641e7ba72a159dbc7013024909885ed92",
+    "pyproject.toml": "40fa222b8feab84f22ad414e95ca8b901bace70af168f81facf3c0c431da695a",
+    "uv.lock": "8c862e9204b92444ffa75294768cf0177135821ac4bcc8097208e0c2a6f7b41a"
+  },
+  "artifacts": {
+    "study.ipynb": "ff72f067bcc1a3975a7f804b77c12593e599644412d716564d219dd4fa3c80b5",
+    "topics/01-return-alignment/README.md": "f8e39a62da397119ff08a43af61bcb048a112ae9c8193d6417174fdd85af1e85",
+    "topics/01-return-alignment/study.ipynb": "5a3d2a404cac004868ff534eca4344a5c11674d4165da482c4df18ed4be3f889",
+    "topics/02-svd-geometry/README.md": "89bf24d41e28626fecfabd74b1eb6183f8a53e03e023a1d539c4f0d8cbb81a82",
+    "topics/02-svd-geometry/study.ipynb": "6a915831047cb0d9fe9137a1e41286adcd23eebd194d86490027a5ca91a1c114",
+    "topics/03-alpha-uncertainty/README.md": "d5471d58a11e0df1f7d3f482eb1e684375c8fc06423c220c802ebec650c0b21b",
+    "topics/03-alpha-uncertainty/study.ipynb": "c052b919806a05fac5c26d5494e1d7411ceb847dbe8affe35cc407fcd97d44c5",
+    "topics/04-economic-exposures/README.md": "c4b2225dd470890a978cbb25af9f5b49e1028c1cc21dc4e53c8eb4a67c306362",
+    "topics/04-economic-exposures/study.ipynb": "35d13216030515b757aaafa262e2b2f2c31985fe9e7ca4cc7f59da75a47d23f0",
+    "topics/05-rolling-attribution/README.md": "4ab38c937be2bf3f58a0b2e6def158c5f2e4ef0fceb50a19a0f9c1740af0d732",
+    "topics/05-rolling-attribution/study.ipynb": "96954de8b2a31df40d1d81671762878b3f300b673d03b1982bddb4e469242c41",
+    "research/figures/topic_alpha_uncertainty.png": "57fb8b53c34076d0709673944478c6e7337f4230fed7fb8f8ec85c13c1af5a91",
+    "research/figures/topic_return_alignment.png": "6d63d1076f1de9268543908e919cec0f0d27fb4c1a4e2e0de694ec34cd8bb66f",
+    "research/figures/topic_svd_filters.png": "e8dfcb96ba37f9f7277bb71231f6e5b62516ab90c8893997cd36f1c255ca135a",
+    "research/figures/topic_svd_stability.png": "6e34008b6cfc85a618512b5248c59b2564ab760d6ba643d0fd1368e4d881291d"
+  }
+}

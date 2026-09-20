@@ -155,3 +155,26 @@ cython_debug/
 
 .idea/
 .vscode/
+
+# Local research inputs and execution artifacts
+research/data/raw/
+research/results/private/
+research/private-legacy/
+research/preview/
+.cache/
+.ruff_cache/
+.mplconfig/
+
+# Private local instructions and agent tooling
+.agents/
+.codex/
+AGENTS.md
+AGENTS.*.md
+CODEX.md
+CODEX.*.md
+codex.md
+codex.*.md
+codex-*.log
+*.codex.log
+RENOVATION_AGENT_INSTRUCTIONS.md
+.renovation_backups/
