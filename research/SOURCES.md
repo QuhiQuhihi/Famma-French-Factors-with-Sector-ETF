@@ -41,19 +41,33 @@ retrieval hashes remain separate from this bibliography.
   Ratios of these observations provide the study's return proxy. They are not an
   independent reconciliation of issuer NAV total returns or historical executable
   trade prices.
-- **iShares, [US sector fund prospectus](https://www.ishares.com/us/literature/prospectus/p-ishares-trust-us-sector-4-30.pdf)**.
-  Documents fund objectives and benchmark histories, including September 2021
-  changes from Dow Jones to Russell indexes. IYK's earlier Consumer Goods mandate
-  and IYC's earlier Consumer Services mandate make current labels imperfect
-  descriptions of the entire history. These changes can alter estimated exposures.
-- **iShares, [other US sector fund prospectus](https://www.ishares.com/us/literature/prospectus/p-ishares-trust-other-us-sector-3-31.pdf)**.
-  Includes IYZ's switch to a Russell telecommunications benchmark in September
-  2021. The study follows actual fund returns across documented benchmark changes,
-  rather than backcasting today's index rules.
-- **BlackRock, [March 2024 annual financial statements](https://www.blackrock.com/us/individual/literature/annual-financial-statements/afs-ishares-nasdaq-s-and-p-phlx-etfs-03-31-en.pdf)**.
-  Documents the former IGN fund's changed objective, benchmark, name and IDGT
-  ticker in December 2023. This is one reason the retained broad-sector panel does
-  not silently substitute current tickers for every legacy specialist fund.
+- **State Street, official fund pages linked in the [sector table](../docs/01-data.md)**.
+  Verify sector names, tickers and fund inception dates. The original nine funds
+  began on 16 December 1998; Real Estate began on 7 October 2015 and Communication
+  Services on 18 June 2018. Inception and exchange listing are distinct dates.
+  These pages describe current fund mandates, not point-in-time historical holdings.
+- **S&P Dow Jones Indices and MSCI, [March 2016 GICS implementation notice](https://www.msci.com/downloads/documents/press-releases/media-room/37f69ddd-2fa0-4b95-9970-5e929a97f7b8.pdf)**.
+  Establishes Real Estate's separation from Financials, excluding mortgage REITs,
+  with different dates for GICS classification and S&P index implementation.
+- **Select Sector SPDR Trust, [September 2016 prospectus supplement](https://www.sec.gov/Archives/edgar/data/1064641/000119312516699787/d246445d497.htm)**.
+  Describes removing the relevant real estate holdings from Financials, exchanging
+  them for Real Estate fund shares and distributing those shares to investors.
+- **BOX/OCC, [Financials distribution notice](https://boxoptions.com/assets/BOXOnnMemo203915.pdf)**
+  and **S&P Dow Jones Indices, [Enhanced Covered Call Strategy Indices methodology](https://www.spglobal.com/spdji/jp/documents/methodologies/methodology-enhanced-cov-call-strat-indices.pdf)**.
+  The exchange notice identifies the 19 September 2016 ex-date. S&P's corporate-action
+  example records the issuer's distribution of 0.139146 Real Estate shares per
+  Financials share, valued at $4.44356 in the announcement. These sources establish
+  an adjustment event; they do not verify Yahoo's treatment of that event.
+- **CME Group, [Communication Services Select Sector futures FAQ](https://www.cmegroup.com/education/articles-and-reports/faq-e-mini-sp-communication-services-select-sector-futures.html)**.
+  Describes the Select Sector rebalance after the close on 21 September 2018 and
+  movement into Communication Services from the existing technology, consumer
+  discretionary and telecommunications groupings. Sector names are not immutable
+  economic exposures through this change.
+
+The earlier iShares sources and complete results remain on the `ishares-study`
+branch. The State Street amendment retains the same French ZIP vintage and records
+its new ETF downloads separately; the [data notice](DATA_NOTICE.md) explains this
+boundary.
 
 ## Estimation and uncertainty
 
@@ -80,8 +94,8 @@ retrieval hashes remain separate from this bibliography.
   *Annals of Statistics*, 17, 1217–1241. Gives the dependent-data rationale for
   block resampling instead of treating individual months as independent draws.
 - **Holm (1979), [A Simple Sequentially Rejective Multiple Test Procedure](https://www.jstor.org/stable/4615733)**,
-  *Scandinavian Journal of Statistics*, 6, 65–70. The ten descriptive OLS
-  intercept p-values form the declared family. Correcting these ten tests does
+  *Scandinavian Journal of Statistics*, 6, 65–70. The nine primary-panel OLS
+  intercept p-values form the declared family. Correcting these nine tests does
   not correct unreported searches, data revisions or model misspecification.
 
 The SVD demonstration and all research figures are generated for this project.

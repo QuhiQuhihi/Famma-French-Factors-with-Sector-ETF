@@ -14,9 +14,29 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 RAW = ROOT / "research/data/raw"
 MANIFEST = ROOT / "research/input_manifest.json"
-TICKERS = ["IYW", "IYF", "IYZ", "IYH", "IYE", "IYK", "IYJ", "IDU", "IYM", "IYC"]
+SECTORS = {
+    "XLC": "Communication Services",
+    "XLY": "Consumer Discretionary",
+    "XLP": "Consumer Staples",
+    "XLE": "Energy",
+    "XLF": "Financials",
+    "XLV": "Health Care",
+    "XLI": "Industrials",
+    "XLB": "Materials",
+    "XLRE": "Real Estate",
+    "XLK": "Technology",
+    "XLU": "Utilities",
+}
+ALL_TICKERS = list(SECTORS)
+TICKERS = [t for t in ALL_TICKERS if t not in {"XLC", "XLRE"}]
 FACTORS = ["Mkt-RF", "SMB", "HML", "RMW", "CMA", "Mom"]
 START, END = "2006-12-01", "2026-08-01"
+EXTENDED_START = "2018-06-19"
+
+
+def source_start(ticker):
+    # XLC's first listed session is June 19, after its June 18 fund inception.
+    return EXTENDED_START if ticker in {"XLC", "XLRE"} else START
 
 
 def digest(path):
@@ -72,30 +92,36 @@ def monthly_simple_returns(prices, sessions):
     return result
 
 
-def load_panel():
+def load_panel(extended=False):
     manifest = json.loads(MANIFEST.read_text())
     for source in manifest["sources"]:
         if digest(RAW / source["filename"]) != source["sha256"]:
             raise ValueError("Source hash mismatch: " + source["filename"])
     ff = french_monthly(RAW / "ff5.zip", ["Mkt-RF", "SMB", "HML", "RMW", "CMA", "RF"])
     mom = french_monthly(RAW / "momentum.zip", ["Mom"])
-    f = ff.join(mom, how="inner").loc["2007-01":"2026-07"]
-    required = pd.period_range("2007-01", "2026-07", freq="M")
+    first_month = "2018-07" if extended else "2007-01"
+    tickers = ALL_TICKERS if extended else TICKERS
+    start = EXTENDED_START if extended else START
+    f = ff.join(mom, how="inner").loc[first_month:"2026-07"]
+    required = pd.period_range(first_month, "2026-07", freq="M")
     if not f.index.equals(required) or f.isna().any().any():
         raise ValueError("Factor coverage does not match the frozen protocol")
     prices = pd.concat(
-        [pd.read_csv(RAW / f"{t}.csv", index_col=0, parse_dates=True) for t in TICKERS],
+        [pd.read_csv(RAW / f"{t}.csv", index_col=0, parse_dates=True).loc[start:] for t in tickers],
         axis=1,
     )
-    if list(prices.columns) != TICKERS:
+    if list(prices.columns) != tickers:
         raise ValueError("ETF columns changed")
-    r = monthly_simple_returns(prices, expected_sessions())
+    r = monthly_simple_returns(prices, expected_sessions(start=start))
     if not r.index.equals(required):
         raise ValueError("ETF month coverage differs from factors")
     y = r.sub(f["RF"], axis=0)
     audit = {
         "price_rows_per_etf": len(prices),
-        "etfs": len(TICKERS),
+        "etfs": len(tickers),
+        "universe": "all eleven State Street sectors"
+        if extended
+        else "original nine State Street sectors",
         "monthly_observations": len(y),
         "first_month": str(y.index[0]),
         "last_month": str(y.index[-1]),
@@ -106,7 +132,7 @@ def load_panel():
         "momentum_source_last_month": str(mom.index[-1]),
         "min_monthly_simple_return": float(r.min().min()),
         "max_monthly_simple_return": float(r.max().max()),
-        "zero_daily_changes": {t: int(prices[t].diff().eq(0).sum()) for t in TICKERS},
+        "zero_daily_changes": {SECTORS[t]: int(prices[t].diff().eq(0).sum()) for t in tickers},
         "min_rf_monthly_decimal": float(f.RF.min()),
         "max_rf_monthly_decimal": float(f.RF.max()),
         "units": "decimal arithmetic monthly returns; ETF excess = simple return minus RF",

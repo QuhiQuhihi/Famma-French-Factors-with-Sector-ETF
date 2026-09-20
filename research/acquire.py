@@ -16,10 +16,12 @@ from research.data import (
     RAW,
     ROOT,
     START,
-    TICKERS,
+    ALL_TICKERS,
+    SECTORS,
     digest,
     expected_sessions,
     french_monthly,
+    source_start,
 )
 
 BASE = "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/"
@@ -46,14 +48,27 @@ def specifications():
         {
             "filename": f"{t}.csv",
             "ticker": t,
+            "sector": SECTORS[t],
             "url": f"https://finance.yahoo.com/quote/{t}/history/",
             "provider": "Yahoo Finance via yfinance",
             "units": "USD adjusted close",
-            "start_inclusive": START,
+            "start_inclusive": source_start(t),
             "end_exclusive": END,
         }
-        for t in TICKERS
+        for t in ALL_TICKERS
     ]
+    sources.append(
+        {
+            "filename": "XLF_2016_event.csv",
+            "ticker": "XLF",
+            "kind": "corporate_action",
+            "url": "https://finance.yahoo.com/quote/XLF/history/",
+            "provider": "Yahoo Finance via yfinance",
+            "units": "USD closes and vendor action fields",
+            "start_inclusive": "2016-09-15",
+            "end_exclusive": "2016-09-23",
+        }
+    )
     return sources
 
 
@@ -89,18 +104,32 @@ def main():
             if prior is None:
                 raise ValueError("Cache restoration requires existing provenance pin")
         elif "ticker" in spec:
+            start, end = spec["start_inclusive"], spec["end_exclusive"]
             h = yf.Ticker(spec["ticker"]).history(
-                start=START,
-                end=END,
+                start=start,
+                end=end,
                 auto_adjust=False,
                 actions=True,
             )
-            series = h["Adj Close"].rename(spec["ticker"])
+            series = (
+                h[["Close", "Adj Close", "Dividends", "Stock Splits"]].copy()
+                if spec.get("kind") == "corporate_action"
+                else h["Adj Close"].rename(spec["ticker"])
+            )
             series.index = series.index.tz_localize(None).normalize().rename("Date")
             if (
-                not series.index.equals(expected_sessions())
-                or not np.isfinite(series).all()
-                or (series <= 0).any()
+                not series.index.equals(expected_sessions(start, end))
+                or not np.isfinite(series.to_numpy()).all()
+                or (
+                    (
+                        series[["Close", "Adj Close"]]
+                        if spec.get("kind") == "corporate_action"
+                        else series
+                    )
+                    <= 0
+                )
+                .to_numpy()
+                .any()
             ):
                 raise ValueError("Incomplete or invalid ETF source: " + spec["ticker"])
             series.to_csv(partial, float_format="%.17g", lineterminator="\n")
@@ -134,6 +163,9 @@ def main():
     if not pinned:
         manifest = {
             "study_vintage": "2026-09-20",
+            "universe": "State Street Select Sector SPDR ETFs; nine long-history primary, eleven-sector shorter supplement",
+            "supersedes_manifest": "research/input_manifest_ishares.json",
+            "factor_vintage": "Reuses the exact original pinned French archives",
             "start_inclusive": START,
             "end_exclusive": END,
             "sources": records,

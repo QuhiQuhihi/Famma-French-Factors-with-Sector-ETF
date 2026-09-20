@@ -14,7 +14,9 @@ uv run ruff check research tests
 uv run ruff format --check research tests
 ```
 
-Acquisition downloads official monthly factor ZIPs and daily adjusted ETF closes.
+Acquisition downloads official monthly factor ZIPs and daily adjusted State Street
+ETF closes, plus a Financials corporate-action snapshot. The nine original funds use
+the long history; Real Estate and Communication Services enter a shorter common panel.
 It reuses a file only when its checksum matches the manifest. Each completed file
 has a local recovery checkpoint; rerun the same command after an interrupted download.
 Temporary `.partial` files never replace a verified source on a checksum mismatch.
@@ -30,7 +32,10 @@ uv run python -m research.acquire --from-cache /path/to/original/raw
 
 To study a new vintage, keep the original manifest and evidence, document a dated
 amendment and rerun the full path. Do not merely edit hashes to bypass verification.
-There is no silent refresh option. January 2007–July 2026 is intentionally fixed here.
+There is no silent refresh option. January 2007–July 2026 is intentionally fixed for
+the primary nine; July 2018–July 2026 is fixed for the eleven-sector supplement.
+The user-requested issuer amendment retains the earlier iShares manifest and full
+study on `ishares-study`. The exact French factor ZIPs are reused across those studies.
 
 ## Outputs and recovery
 

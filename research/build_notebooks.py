@@ -7,7 +7,7 @@ import nbformat as nbf
 from nbclient import NotebookClient
 from nbconvert import HTMLExporter
 
-from research.data import ROOT, digest
+from research.data import ROOT, TICKERS, digest
 from research.topic_notebooks import topic_specs
 
 M = nbf.v4.new_markdown_cell
@@ -28,7 +28,37 @@ FIGURES = ROOT / 'research/figures'
 """
 
 
+def comparison_text(head):
+    """Describe the saved comparison without assuming its sign or significance."""
+    reduction = head["relative_mse_reduction_pct"]
+    change = (
+        f"{abs(reduction):.2f}% lower"
+        if reduction > 0
+        else f"{abs(reduction):.2f}% higher"
+        if reduction < 0
+        else "unchanged"
+    )
+    if head["upper95"] < 0:
+        conclusion = (
+            "The paired interval supports lower reconstruction error for ridge in this panel."
+        )
+    elif head["lower95"] > 0:
+        conclusion = (
+            "The paired interval supports higher reconstruction error for ridge in this panel."
+        )
+    else:
+        conclusion = "The paired interval includes zero and does not resolve a difference."
+    return (
+        f"Ridge's reconstruction MSE is **{change}** relative to OLS on the point estimate. "
+        f"The paired ridge-minus-OLS difference is **{head['estimate']:.3f} pp²**, "
+        f"with a 95% block interval **[{head['lower95']:.3f}, {head['upper95']:.3f}]**. "
+        + conclusion
+    )
+
+
 def evidence_specs():
+    head = json.loads((ROOT / "research/results/headline.json").read_text())
+    primary_count = len(TICKERS)
     return [
         {
             "slug": "04-economic-exposures",
@@ -36,20 +66,20 @@ def evidence_specs():
             "intro": "A sector name is not a factor portfolio. Compare market, size, value, profitability, investment and momentum sensitivities in their original units, then separate fitted contributions from residual risk.",
             "cells": [
                 M(
-                    "## Question\nWhat does a technology or utilities label tell us about the fund's economic risks? This chapter uses the historical ten-fund panel, January 2007–July 2026. Full-sample estimates describe that sample; they do not reconstruct historical holdings."
+                    f"## Question\nWhat does a technology or utilities label tell us about the fund's economic risks? The primary panel uses {primary_count} original State Street Select Sector SPDR funds over January 2007–July 2026. A separate, shorter panel includes all eleven current sectors. Full-sample estimates describe their stated samples; they do not reconstruct historical holdings or backcast today's sector definitions."
                 ),
                 C(
-                    "from research.data import FACTORS, load_panel\nfrom research.models import fit_factor_model, hac_ols\nx, y, audit = load_panel()\nexposures = pd.read_csv(RESULTS / 'exposures.csv').set_index('ticker')\ndisplay(exposures.round(3))"
+                    "from research.data import FACTORS, SECTORS, load_panel\nfrom research.models import fit_factor_model, hac_ols\nx, y, audit = load_panel()\nexposures = pd.read_csv(RESULTS / 'exposures.csv').drop(columns='ticker').set_index('sector')\ndisplay(exposures.round(3))"
                 ),
                 M(
                     "## Compare the factor sensitivities\nBeta 1 means a one-percentage-point factor return contributes one percentage point to the fitted ETF excess return, conditional on the other factors. A coefficient is not a portfolio weight."
                 ),
                 C("display(Image(filename=str(FIGURES / 'factor_map.png')))"),
                 M(
-                    "## Reconcile one fund in arithmetic return units\nIYW is a fixed teaching example, not the best-looking intercept selected from the table. The intercept, factor contributions and mean residual must reconcile to the mean ETF excess return. These annual arithmetic quantities do not compound to a wealth path."
+                    "## Reconcile the Technology sector in arithmetic return units\nTechnology is a fixed teaching example. The intercept, factor contributions and mean residual must reconcile to the mean ETF excess return. These annual arithmetic quantities do not compound to a wealth path. The sector fund's composition can change even when its current display name stays the same."
                 ),
                 C(
-                    "ticker = 'IYW'\nfit = fit_factor_model(x.to_numpy(), y[ticker].to_numpy())\ncontributions = pd.Series(fit.beta * x.mean().to_numpy(), index=FACTORS)\ncontributions['Intercept'] = fit.intercept\nresidual = y[ticker].to_numpy() - fit.predict(x.to_numpy())\ncontributions['Mean residual'] = residual.mean()\nassert np.isclose(contributions.sum(), y[ticker].mean(), atol=1e-12)\ndisplay((contributions * 1200).rename('Annual arithmetic contribution (%)').round(3).to_frame())"
+                    "ticker = 'XLK'\nfit = fit_factor_model(x.to_numpy(), y[ticker].to_numpy())\ncontributions = pd.Series(fit.beta * x.mean().to_numpy(), index=FACTORS)\ncontributions['Intercept'] = fit.intercept\nresidual = y[ticker].to_numpy() - fit.predict(x.to_numpy())\ncontributions['Mean residual'] = residual.mean()\nassert np.isclose(contributions.sum(), y[ticker].mean(), atol=1e-12)\ndisplay((contributions * 1200).rename(f'{SECTORS[ticker]}: annual arithmetic contribution (%)').round(3).to_frame())"
                 ),
                 M(
                     "## How much precision does the value loading have?\nThe HAC interval is model-conditional and pointwise. Correlated factors can make one coefficient imprecise even when the fitted total return is useful."
@@ -58,14 +88,26 @@ def evidence_specs():
                     "inference = hac_ols(x.to_numpy(), y[ticker].to_numpy(), lags=6)\nj = FACTORS.index('HML') + 1\nvalue_beta = inference.coefficients[j]\nvalue_se = inference.standard_errors[j]\ndisplay(pd.DataFrame({'HML beta': [value_beta], 'Pointwise lower 95%': [value_beta - 1.96*value_se], 'Pointwise upper 95%': [value_beta + 1.96*value_se]}).round(3))"
                 ),
                 M(
-                    "## Interpretation\nEnergy exposure is not an oil futures position, utilities are not duration alone, and profitability beta is not an accounting screen applied to today's holdings. The fixed model and changing benchmark history limit those interpretations. [Data and fund identity](../../docs/01-data.md) explains the September 2021 changes."
+                    "## Include all eleven sectors without inventing their histories\nReal Estate and Communication Services began trading later than the original nine funds. The common eleven-sector sample begins with July 2018 returns and ends in July 2026: 97 monthly observations. The next map estimates every sector on those same dates. It supplements the longer primary panel; comparisons between the maps combine a universe change with a sample-period change."
+                ),
+                C(
+                    "extended_x, extended_y, extended_audit = load_panel(extended=True)\nassert len(extended_x) == 97 and extended_y.shape[1] == 11\ndisplay(Image(filename=str(FIGURES / 'extended_factor_map.png')))\nextended_exposures = pd.read_csv(RESULTS / 'extended_exposures.csv').drop(columns='ticker').set_index('sector')\ndisplay(extended_exposures.round(3))"
+                ),
+                M(
+                    "## Read the shorter reconstruction comparison in its own scope\nA 60-month fit leaves only 37 evaluation months, July 2023–July 2026, in this eleven-sector panel. The table also includes the original nine sectors on those same recent dates. This recent-nine control separates the effect of adding Real Estate and Communication Services from the change in evaluation dates. Neither recent-panel estimate is directly comparable with the long-sample primary headline. These are equally weighted sector error summaries, not portfolio weights. A 120-month fitting window is infeasible, and no pre-inception ETF returns are supplied."
+                ),
+                C(
+                    "extended_head = json.loads((RESULTS / 'extended_headline.json').read_text())\nrecent_nine = extended_head['recent_nine']\nassert extended_head['n'] == recent_nine['n'] == 37\ndisplay(pd.read_csv(RESULTS / 'extended_summary.csv').round(4))\ndisplay(pd.DataFrame([extended_head, recent_nine], index=['All eleven sectors, recent dates', 'Original nine sectors, same recent dates'])[['estimate', 'lower95', 'upper95', 'relative_mse_reduction_pct', 'n']].rename(columns={'estimate': 'Ridge minus OLS MSE (pp²)', 'n': 'Evaluation months'}).round(4))"
+                ),
+                M(
+                    "## Interpretation\nEnergy exposure is not an oil futures position, utilities are not duration alone, and profitability beta is not an accounting screen applied to today's holdings. The fixed model and changing benchmark history limit those interpretations. [Data and fund identity](../../docs/01-data.md) discusses the 2016 Real Estate separation and 2018 Communication Services reclassification. Current sector names aid reading; they do not imply an unchanged historical mandate."
                 ),
             ],
         },
         {
             "slug": "05-rolling-attribution",
             "title": "Do the exposures travel to the next month?",
-            "intro": "Freeze a 60-month exposure estimate, supply the next month's realized factors, and measure reconstruction error. Compare ridge's smaller coefficient changes with its uncertain tracking gain and PCR's cost of discarding directions.",
+            "intro": "Freeze a 60-month exposure estimate, supply the next month's realized factors, and measure reconstruction error. Compare coefficient movement with tracking accuracy, then examine the bias introduced by shrinkage and discarded directions.",
             "cells": [
                 M(
                     "## Question and timing\nThe coefficients are fitted through t−1. Factor returns for t are observed afterward and enter the reconstruction. This is a test of exposure portability conditional on realized factors, not an ex ante return forecast. The source files are also revised vintages."
@@ -74,7 +116,7 @@ def evidence_specs():
                     "from research.data import load_panel\nfrom research.run_study import rolling_reconstruction, comparison, summarize\nx, y, audit = load_panel()\npaths = rolling_reconstruction(x, y)\nassert (paths.train_end < paths.month).all()\ndisplay(summarize(paths).round(4))"
                 ),
                 M(
-                    "## Paired panel comparison\nAverage squared percentage-point errors equally across all ten funds within each month. Resample those paired months in common 12-month blocks, retaining sector dependence."
+                    f"## Paired panel comparison\nAverage squared percentage-point errors equally across the {primary_count} primary State Street sector funds within each month. Resample those paired months in common 12-month blocks, retaining sector dependence."
                 ),
                 C(
                     "interval = comparison(paths)\ndisplay(pd.Series({k: interval[k] for k in ['estimate', 'lower95', 'upper95', 'relative_mse_reduction_pct', 'n']}).to_frame('Ridge minus OLS comparison'))\ndisplay(Image(filename=str(FIGURES / 'reconstruction.png')))"
@@ -90,7 +132,9 @@ def evidence_specs():
                     "display(pd.read_csv(RESULTS / 'estimator_sensitivity.csv').round(4))\nwindows = pd.read_csv(RESULTS / 'window_sensitivity.csv')\ndisplay(windows[windows.scope.eq('common dates')][['window', 'estimate', 'lower95', 'upper95', 'relative_mse_reduction_pct']].round(4))"
                 ),
                 M(
-                    "## Research decision\nThe primary interval spans zero. Ridge provides a useful controlled regularization example and smoother loadings, but this study does not establish a robust improvement in reconstruction. A shorter-window sensitivity supports a more favorable estimate; it remains supporting evidence after a fixed primary comparison. [Full results](../../docs/03-results.md) retain the complete record."
+                    "## Research decision\n"
+                    + comparison_text(head)
+                    + " Coefficient stability and bounded sensitivities describe other aspects of the fit; none replaces this primary endpoint. The eleven-sector extension has a shorter evaluation period and remains supplemental. [Full results](../../docs/03-results.md) retain the complete record."
                 ),
             ],
         },
@@ -104,14 +148,16 @@ def central_cells():
             "# When can we trust a sector ETF's factor exposures?\n\nFama–French factors, SVD geometry and robust attribution."
         ),
         M(
-            f"## Findings\nAcross ten original broad iShares funds, fixed ridge reduces reconstruction MSE by **{h['relative_mse_reduction_pct']:.2f}%** relative to OLS. The paired difference is **{h['estimate']:.3f} pp²**, with a 95% block interval **[{h['lower95']:.3f}, {h['upper95']:.3f}]**. The interval spans zero. Ridge smooths exposures, but the evidence does not establish an improvement. PCR rank four performs worse on the point estimate.\n\nThe contribution is a disciplined comparison of attribution methods, not a trading strategy."
+            f"## Findings\nThe primary experiment covers {h['sector_count']} original State Street Select Sector SPDR funds. "
+            + comparison_text(h)
+            + "\n\nAn eleven-sector extension includes Real Estate and Communication Services on a shorter common sample. The contribution is a disciplined comparison of attribution methods; no trading strategy is evaluated."
         ),
         M(
-            "## Context and methods\nThe response is monthly simple ETF return less RF; the regressors are FF5 plus momentum in consistent decimal units. Full-sample fits describe history. Rolling estimates use only preceding observations, then reconstruct the next return with its **realized factors**. The primary window is 60 months, ridge lambda is 0.1 in mean-loss units, and PCR retains four singular directions.\n\n### Key assumptions\nYahoo adjusted close is a total-return proxy. Current-vintage factors and evolving fund benchmarks prevent a point-in-time holdings or deployment interpretation. The ten funds are selected survivors. [Protocol](research/PROTOCOL.md) records the design and bounded sensitivities."
+            "## Context and methods\nThe response is monthly simple ETF return less RF; the regressors are FF5 plus momentum in consistent decimal units. Full-sample fits describe history. Rolling estimates use only preceding observations, then reconstruct the next return with its **realized factors**. The primary window is 60 months, ridge lambda is 0.1 in mean-loss units, and PCR retains four singular directions.\n\n### Key assumptions\nYahoo adjusted close is a total-return proxy. Current-vintage factors and evolving fund benchmarks prevent a point-in-time holdings or deployment interpretation. The nine long-history funds are selected survivors; their past holdings need not match today's sector definitions. The switch to State Street funds follows inspection of the earlier iShares result. The [protocol](research/PROTOCOL.md) records the amended universe and bounded comparisons."
         ),
         C(SETUP),
         M(
-            "## Data\nThe common sample has 235 months, January 2007–July 2026. December 2006 supplies the first return denominator. Raw downloads stay local; source URLs, retrieval timestamps and checksums are public."
+            f"## Data\nThe primary sample has {h['sample_months']} months, January 2007–July 2026. December 2006 supplies the first return denominator. Its 60-month windows leave {h['evaluation_months']} evaluation months, January 2012–July 2026. Raw downloads stay local; source URLs, retrieval timestamps and checksums are public."
         ),
         C(
             "from research.data import load_panel\nx, y, audit = load_panel()\ndisplay(pd.Series({k: audit[k] for k in ['etfs','price_rows_per_etf','monthly_observations','first_month','last_month','missing_prices','missing_factors','fills']}).to_frame('Validated panel'))"
@@ -120,10 +166,10 @@ def central_cells():
             "## Economic exposures\nThese are economic regression coefficients, not holdings weights. Market exposure differs across sectors; the remaining factors refine rather than replace that common equity risk."
         ),
         C(
-            "display(Image(filename=str(FIGURES / 'factor_map.png')))\ndisplay(pd.read_csv(RESULTS / 'exposures.csv')[['ticker','r_squared','residual_vol_annual_pct']].round(3))"
+            "display(Image(filename=str(FIGURES / 'factor_map.png')))\ndisplay(pd.read_csv(RESULTS / 'exposures.csv')[['sector','r_squared','residual_vol_annual_pct']].set_index('sector').round(3))"
         ),
         M(
-            f"## SVD diagnoses the problem before changing the estimator\nThe median rolling condition number is **{h['condition_median']:.2f}**, ranging from **{h['condition_min']:.2f} to {h['condition_max']:.2f}**. These actual factor designs are not numerically near-singular. In the final training window, ridge attenuates each singular direction continuously; PCR deletes two directions. Small factor variance does not imply little information about a particular ETF."
+            f"## SVD diagnoses the problem before changing the estimator\nThe median rolling condition number is **{h['condition_median']:.2f}**, ranging from **{h['condition_min']:.2f} to {h['condition_max']:.2f}**. These diagnostics describe the factor design rather than the issuer's labels. In the final training window, ridge attenuates each singular direction continuously; PCR deletes two directions. Small factor variance does not imply little information about a particular ETF."
         ),
         C("display(Image(filename=str(FIGURES / 'singular_geometry.png')))"),
         M(
@@ -134,23 +180,37 @@ def central_cells():
         ),
         C("display(Image(filename=str(FIGURES / 'reconstruction.png')))"),
         M(
-            "## Coefficient stability and reconstruction accuracy are different\nRidge lowers the RMS change in the six economic betas. PCR's changing truncated subspace produces more unstable raw exposures in this sample. Neither smoothness nor explained factor variance is itself evidence of better attribution."
+            "## Coefficient stability and reconstruction accuracy are different\nCompare the measured RMS change in all six economic betas with reconstruction error. Shrinkage may reduce coefficient movement, while PCR's truncated subspace can itself move between fits. Neither smoothness nor explained factor variance is sufficient evidence of better attribution. The Technology example retains actual historical changes to the fund's composition."
         ),
         C("display(Image(filename=str(FIGURES / 'stability.png')))"),
         M(
-            "## Residual means and uncertainty\nThe intervals are six-lag HAC, pointwise and normal-approximation. No intercept survives Holm adjustment across the ten ETFs at 5%. This is not proof that every alpha is zero; precision, omitted factors and changing betas matter."
+            f"## Residual means and uncertainty\nThe intervals are six-lag HAC, pointwise and normal-approximation. **{h['holm_rejections_5pct']} of {h['sector_count']}** primary-panel intercepts have Holm-adjusted p-values below 5%. The testing family contains these {h['sector_count']} descriptive intercepts. Rejection remains model-relative, and non-rejection does not prove zero alpha; precision, omitted factors and changing betas matter."
         ),
         C(
-            "display(Image(filename=str(FIGURES / 'alpha_intervals.png')))\ndisplay(pd.read_csv(RESULTS / 'alpha.csv')[['ticker','alpha_arithmetic_annual_pct','lower95_arithmetic_annual_pct','upper95_arithmetic_annual_pct','holm_p_value']].round(3))"
+            "display(Image(filename=str(FIGURES / 'alpha_intervals.png')))\ndisplay(pd.read_csv(RESULTS / 'alpha.csv')[['sector','alpha_arithmetic_annual_pct','lower95_arithmetic_annual_pct','upper95_arithmetic_annual_pct','holm_p_value']].set_index('sector').round(3))"
         ),
         M(
-            "## Sensitivities without choosing a winner\nKeep the stronger and weaker penalties, all retained ranks, and windows on common dates. The favorable 36-month result is supporting evidence; it does not rewrite the prespecified primary result."
+            "## Sensitivities without choosing a winner\nKeep the stronger and weaker penalties, all retained ranks, and windows on common dates. Each favorable or unfavorable sensitivity remains supporting evidence; it does not rewrite the fixed primary comparison."
         ),
         C(
             "display(pd.read_csv(RESULTS / 'estimator_sensitivity.csv').round(4))\nwindows = pd.read_csv(RESULTS / 'window_sensitivity.csv')\ndisplay(windows[windows.scope.eq('common dates')][['window','estimate','lower95','upper95','relative_mse_reduction_pct']].round(4))"
         ),
         M(
-            "## Takeaways\nUse SVD to understand identification, preserve economic units, and test whether regularization earns its bias. In this vintage, fixed ridge smooths exposures and has a modest, uncertain reconstruction advantage; aggressive shrinkage or truncation can remove useful information. More reliable attribution would require independent price reconciliation, dated holdings and a genuinely later evaluation period.\n\nExplore the [five chapters](README.md#explore-the-research), [sources](research/SOURCES.md), [full evidence](docs/03-results.md), and [next experiments](research/RESEARCH_AGENDA.md)."
+            "## All eleven sectors on their common observed history\nReal Estate and Communication Services have shorter ETF histories. This supplemental panel therefore uses July 2018–July 2026: 97 complete monthly returns for every sector. The map uses the same dates for all eleven funds; no earlier observations are backfilled. Its estimates cannot be compared with the long-panel map as though only the universe changed."
+        ),
+        C(
+            "extended_x, extended_y, extended_audit = load_panel(extended=True)\nassert len(extended_x) == 97 and extended_y.shape[1] == 11\ndisplay(Image(filename=str(FIGURES / 'extended_factor_map.png')))\ndisplay(pd.read_csv(RESULTS / 'extended_exposures.csv').drop(columns='ticker').set_index('sector').round(3))"
+        ),
+        M(
+            "## A shorter supplemental reconstruction window\nThe eleven-sector extension leaves 37 evaluation months, July 2023–July 2026, after the same 60-month fitting window. The original nine sectors are also evaluated on those same recent dates, providing a control that separates adding sectors from changing the evaluation period. The two recent-panel estimates are not directly comparable with the long-sample primary headline and do not replace it. Each panel averages sector errors; these are not portfolio allocations. There are too few observations for a 120-month fit."
+        ),
+        C(
+            "extended_head = json.loads((RESULTS / 'extended_headline.json').read_text())\nrecent_nine = extended_head['recent_nine']\nassert extended_head['n'] == recent_nine['n'] == 37\ndisplay(pd.read_csv(RESULTS / 'extended_summary.csv').round(4))\ndisplay(pd.DataFrame([extended_head, recent_nine], index=['All eleven sectors, recent dates', 'Original nine sectors, same recent dates'])[['estimate', 'lower95', 'upper95', 'relative_mse_reduction_pct', 'n']].rename(columns={'estimate': 'Ridge minus OLS MSE (pp²)', 'n': 'Evaluation months'}).round(4))"
+        ),
+        M(
+            "## Takeaways\n"
+            + comparison_text(h)
+            + " Use SVD to understand identification, preserve economic units, and test whether regularization earns its bias. The eleven-sector extension broadens coverage while shortening the observed history. More reliable attribution would require independent price reconciliation, dated holdings and a genuinely later evaluation period.\n\nExplore the [five chapters](README.md#explore-the-research), [sources](research/SOURCES.md), [full evidence](docs/03-results.md), and [next experiments](research/RESEARCH_AGENDA.md)."
         ),
     ]
 
@@ -215,7 +275,7 @@ def main():
             "01-return-alignment": ["topic_return_alignment.png"],
             "02-svd-geometry": ["topic_svd_filters.png", "topic_svd_stability.png"],
             "03-alpha-uncertainty": ["topic_alpha_uncertainty.png"],
-            "04-economic-exposures": ["factor_map.png"],
+            "04-economic-exposures": ["factor_map.png", "extended_factor_map.png"],
             "05-rolling-attribution": ["reconstruction.png", "stability.png"],
         }
         prose.append("## Evidence preview")

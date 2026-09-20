@@ -282,5 +282,28 @@
       "disposition": "exclude_from_primary_preserve_as_documented_extension",
       "reason": "Oil-equipment and services industry sleeve overlaps the broad energy core."
     }
-  ]
+  ],
+  "disposition_scope": "Original 2022 files and the initial iShares renovation at 5926897; ticker dispositions are historical, not the current State Street universe.",
+  "current_universe_amendment": {
+    "date": "2026-09-20",
+    "reason": "User requested State Street ETFs and sector-name visualizations after the initial iShares study.",
+    "preserved_revision": "ishares-study",
+    "preserved_commit": "5926897c8ac815133e96afb265b39ba25513d9f3",
+    "primary_funds": [
+      "XLY",
+      "XLP",
+      "XLE",
+      "XLF",
+      "XLV",
+      "XLI",
+      "XLB",
+      "XLK",
+      "XLU"
+    ],
+    "supplement_additions": [
+      "XLC",
+      "XLRE"
+    ],
+    "protocol": "research/PROTOCOL.md"
+  }
 }

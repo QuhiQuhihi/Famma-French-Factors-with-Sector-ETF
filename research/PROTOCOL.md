@@ -1,8 +1,14 @@
 # Stable exposures, honest attribution
 
-Specified 20 September 2026 after inspecting the original implementation and source
-availability, before the renovated evaluation. This is a retrospective research design,
-not an independently registered experiment or an untouched historical holdout.
+Initial iShares design specified 20 September 2026. **Issuer amendment on the same
+date:** at the user's request, replace the iShares universe with State Street Select
+Sector SPDR ETFs and use sector names in figures. This amendment follows inspection
+of the iShares results and precedes the State Street evaluation. The prior protocol,
+results and notebooks remain at commit `5926897c8ac815133e96afb265b39ba25513d9f3`
+on `ishares-study`; its input manifest is retained as `input_manifest_ishares.json`.
+This is a retrospective research design, not an independently registered experiment
+or an untouched historical holdout. The issuer change is a user preference, not a
+performance-selected universe revision.
 
 ## Question and economic mechanism
 
@@ -15,7 +21,7 @@ improved reconstruction, reliable alpha, or an investable forecast.
 
 Primary comparison: fixed ridge penalty 0.1 against OLS, both with Fama–French five
 factors plus momentum and an intercept. Endpoint: mean across months of the equally
-weighted mean squared reconstruction error across the ten ETFs. Report ridge-minus-OLS
+weighted mean squared reconstruction error across the nine primary ETFs. Report ridge-minus-OLS
 in squared percentage points, its percentage reduction relative to OLS, and a paired
 95% circular moving-block bootstrap interval (2,000 resamples, 12 months, seed 20260920).
 Resample whole monthly vectors, preserving sector dependence. A negative difference
@@ -24,11 +30,30 @@ and coefficient stability separately. Do not infer equivalence from a wide inter
 
 ## Universe and information
 
-Use ten broad exposures from the original iShares universe: IYW, IYF, IYZ, IYH, IYE,
-IYK, IYJ, IDU, IYM, IYC. This fixed subset keeps the original issuer identity and
-avoids overlapping specialist sleeves (including the legacy IGN mandate/ticker change).
-It is a selected surviving universe, not an exhaustive point-in-time industry panel.
-Historical benchmark changes remain part of each actual fund's history.
+Use State Street's nine original Select Sector funds: Consumer Discretionary (XLY),
+Consumer Staples (XLP), Energy (XLE), Financials (XLF), Health Care (XLV), Industrials
+(XLI), Materials (XLB), Technology (XLK), and Utilities (XLU). All launched in 1998,
+so they support the retained January 2007–July 2026 sample and 120-month sensitivity.
+The primary comparison is conditional on these surviving funds and their changing
+historical sector definitions. Tickers identify inputs; readers see sector names.
+
+Real Estate (XLRE, launched October 2015) and Communication Services (XLC, June 2018)
+enter a **separate eleven-sector supplement**. Acquire their prices from XLC's first
+listed session, 19 June 2018; June month-end supplies July's denominator. The common
+sample July 2018–July 2026 contains 97 monthly returns and only 37 subsequent months
+after 60-month fits. Show an eleven-sector descriptive exposure map and the same five
+primary estimator summaries on those dates. Report a paired ridge-minus-OLS interval
+as supporting evidence with explicitly limited precision; do not replace the long
+sample, add a 120-month fit, or backfill either fund. Also score the original nine on
+these same recent dates to separate the sample-period change from adding two funds.
+Do not extend the nine-intercept inferential family to exploratory eleven-sector fits.
+
+The 2016 Real Estate separation and 2018 Communication Services reclassification
+alter sector definitions. Preserve actual fund histories, not backcast contemporary
+holdings. XLF's September 2016 distribution of XLRE shares requires checking vendor
+adjusted-price behavior; a distribution-related raw-price drop must not be called a
+sector loss, and distributions already reflected in adjusted prices must not be added
+again. Save an event-window source snapshot and an explicit adjustment diagnostic.
 
 Daily Yahoo adjusted closes start December 2006; take actual final exchange sessions
 of each complete calendar month. Monthly arithmetic returns start January 2007.
@@ -64,7 +89,7 @@ Supporting evidence: full-sample FF6 economic exposure map; rolling condition nu
 and singular-value spectra; raw-beta changes; effective degrees of freedom; reconstruction
 RMSE by ETF and method; cumulative paired loss; SVD filter comparison. Report full-sample
 OLS intercepts with six-lag Newey–West covariance, n/(n−p) finite-sample correction,
-normal-approximation 95% intervals and Holm p-values over the ten ETF intercepts.
+normal-approximation 95% intervals and Holm p-values over the nine primary ETF intercepts.
 These are descriptive, model-conditional intercepts, not causal skill estimates.
 
 ## Bounded challenges

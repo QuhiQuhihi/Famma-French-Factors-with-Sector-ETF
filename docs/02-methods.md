@@ -3,9 +3,15 @@
 A factor model can reconstruct a sector's return reasonably well while its individual
 loadings move substantially between samples. The central question is whether
 regularization improves subsequent-month reconstruction, and how much economic
-detail it gives up. The [protocol](../research/PROTOCOL.md) fixes the comparison
-before this evaluation; historical data and the original implementation were already
-available, so this is not an untouched or independently registered experiment.
+detail it gives up. The [protocol](../research/PROTOCOL.md) and its State Street
+amendment fix the comparison for the revised fund universe. Historical data, the
+original implementation and the earlier iShares results were already observed, so
+this is not an untouched or independently registered experiment.
+
+The primary panel contains the original nine Select Sector SPDR funds over January
+2007–July 2026: 235 return observations and 175 evaluation months after the 60-month
+training window. Research displays use sector names. Real Estate and Communication
+Services join the separate eleven-sector extension described below.
 
 ## What the equation does
 
@@ -89,14 +95,14 @@ diagnostics; the declared primary comparison remains ridge versus six-factor OLS
 
 For reconstruction error $e_{i,t}^{(m)}=y_{i,t}-\widehat y_{i,t}^{(m)}$, define
 
-$$L_t^{(m)}=\frac{1}{10}\sum_i(e_{i,t}^{(m)})^2,\qquad
+$$L_t^{(m)}=\frac{1}{9}\sum_i(e_{i,t}^{(m)})^2,\qquad
 \Delta=\frac{1}{T}\sum_t\left(L_t^{(ridge)}-L_t^{(OLS)}\right).$$
 
 Negative $\Delta$ favors ridge. Decimal squared errors multiplied by $10{,}000$
 are **squared percentage points**; multiplying their square roots by 100 produces
 RMSE in monthly percentage points. Relative error reduction is
 $-100\Delta/\overline L^{(OLS)}$. Equal weighting is an evaluation choice across
-ten funds, not a portfolio allocation.
+nine sectors, not a portfolio allocation.
 
 ## Uncertainty and the limits of stability
 
@@ -117,14 +123,32 @@ zero is inconclusive, not evidence of equivalence.
 Full-sample OLS intercepts are a separate descriptive analysis. Their covariance uses
 six-lag Newey–West weights and an $n/(n-p)$ finite-sample adjustment, with $p=7$ for
 six slopes and an intercept. Normal-approximation intervals accompany the estimates;
-Holm adjustment applies to the family of ten intercept p-values. These controls do
+Holm adjustment applies to the family of nine primary-panel intercept p-values. These controls do
 not make alpha causal, remove specification error, or supply valid OLS inference for
 biased ridge/PCR coefficients. See [Newey and West](https://www.nber.org/papers/t0055)
 and [Holm](https://www.jstor.org/stable/4615733).
 
+## The eleven-sector extension
+
+The extension adds Real Estate and Communication Services on a common July
+2018–July 2026 return sample. Its 97 months support an eleven-sector descriptive
+six-factor exposure map and the same 60-month rolling reconstruction methods.
+Only 37 subsequent months remain for evaluation, with shared sector shocks and
+overlapping training windows. Report exposures and errors as descriptive evidence;
+do not create a second alpha-testing family or claim stronger statistical conclusions
+from this short panel.
+
+For extension error summaries replace the denominator nine by eleven and use the
+extension's common dates. This is a different sample and endpoint composition, so
+its aggregate error is not directly comparable with the primary aggregate. No
+120-month fit can be estimated from 97 months, and missing older fund history is
+neither substituted with an index nor extrapolated. Historical sector boundaries
+still matter: July and August precede the September 2018 reclassification, while
+September spans its implementation.
+
 ## Challenges fixed before evaluation
 
-Supporting runs use ridge penalties 0.01 and 1, PCR ranks 3 and 5, windows of 36 and
+Primary-panel supporting runs use ridge penalties 0.01 and 1, PCR ranks 3 and 5, windows of 36 and
 120 months, and six-month bootstrap blocks. Window comparisons share dates beginning
 after 120 observations, while each window's available sample is also retained. None
 of these runs replaces the primary result or licenses a claim about a winning sector.

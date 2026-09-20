@@ -8,6 +8,13 @@ references below refer to that original commit, not the renovated implementation
 
 ## Original question and inspected evidence
 
+**Current scope amendment:** after the initial iShares renovation below, the user
+requested State Street sector ETFs and sector-name figures. The current protocol
+uses the original nine SPDR funds for the long comparison and all eleven on their
+shorter common history. The iShares revision remains on `ishares-study` at `5926897`.
+The original defects and file hashes below are historical evidence, not descriptions
+of the current source universe.
+
 The project estimated annual Fama–French five-factor-plus-momentum exposures for
 28 iShares sector and industry ETFs, then plotted the six coefficients through time.
 This is a useful sector-attribution question. The original code also printed
@@ -54,16 +61,16 @@ French APIs. API-default drift and ZIP member-name changes are reproducibility r
 not additional claimed execution failures. The maintained acquisition code makes
 adjustment treatment explicit and validates the acquired files directly.
 
-## Universe decision
+## Initial iShares universe decision (superseded)
 
 The original 28 tickers were IYW, IYF, IYZ, IYH, IYE, IYK, IYG, IYJ, IDU, IYM,
 IYC, IBB, IGM, SOXX, IGV, IGN, IGE, IYT, IHI, ITA, IHF, IEO, ITB, IAT, IAI,
 IAK, IHE, and IEZ. They mix broad sectors with narrower industries and overlapping
 exposures. They are not 28 independent sectors or an exhaustive historical universe.
 
-The [protocol](PROTOCOL.md) selects ten broad exposures before the renovated
+The initial protocol selected ten broad exposures before its first renovated
 evaluation: **IYW, IYF, IYZ, IYH, IYE, IYK, IYJ, IDU, IYM, and IYC**. The remaining
-18 receive explicit ticker-level dispositions in the inventory. No omitted fund is
+18 received explicit ticker-level dispositions in the inventory. No omitted fund was
 replaced on the basis of observed model performance. The empirical conclusion is
 conditional on this selected surviving core.
 

@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from research.data import FACTORS, ROOT, TICKERS, digest, load_panel
+from research.data import ALL_TICKERS, FACTORS, RAW, ROOT, SECTORS, TICKERS, digest, load_panel
 from research.models import fit_factor_model, hac_ols, holm_adjust, paired_block_mean_difference
 
 RESULTS = ROOT / "research/results"
@@ -64,6 +64,7 @@ def rolling_reconstruction(factors, excess, window=60, specifications=None):
                     "train_start": str(train_x.index[0]),
                     "train_end": str(train_x.index[-1]),
                     "ticker": ticker,
+                    "sector": SECTORS.get(ticker, ticker),
                     "model": label,
                     "window": window,
                     "prediction": prediction,
@@ -135,17 +136,41 @@ def summarize(paths):
     return pd.DataFrame(rows)
 
 
-def figures(exposures, alpha, primary, summary, singular, headline):
-    plt.rcParams.update(
-        {"font.size": 10, "axes.spines.top": False, "axes.spines.right": False, "figure.dpi": 140}
-    )
-    fig, ax = plt.subplots(figsize=(10, 5.6), layout="constrained")
-    values = exposures.set_index("ticker").loc[TICKERS, FACTORS].to_numpy()
+def corporate_action_diagnostic():
+    event = pd.read_csv(RAW / "XLF_2016_event.csv", index_col=0)
+    prices = pd.read_csv(RAW / "XLF.csv", index_col=0)
+    before, after = "2016-09-16", "2016-09-19"
+    adjusted = event.loc[after, "Adj Close"] / event.loc[before, "Adj Close"] - 1
+    close_change = event.loc[after, "Close"] / event.loc[before, "Close"] - 1
+    main_return = prices.loc[after, "XLF"] / prices.loc[before, "XLF"] - 1
+    # Yahoo encodes this historical in-kind distribution as a split-like action.
+    # Its Close field is already split-adjusted: it is not an unadjusted trade tape.
+    if not np.isclose(event.loc[after, "Stock Splits"], 1.231, atol=1e-10):
+        raise ValueError("Financials distribution representation changed; investigate source")
+    if abs(adjusted - main_return) > 1e-6:
+        raise ValueError("Corporate-action window differs from main prices by more than 0.01 bp")
+    return {
+        "sector": "Financials",
+        "ticker": "XLF",
+        "event_date": after,
+        "vendor_split_like_factor": float(event.loc[after, "Stock Splits"]),
+        "provider_close_change_pct": float(close_change * 100),
+        "event_adjusted_return_pct": float(adjusted * 100),
+        "main_adjusted_return_pct": float(main_return * 100),
+        "two_downloads_return_difference_bps": float((adjusted - main_return) * 10000),
+        "manual_distribution_added": False,
+        "scope": "Vendor internal consistency only; historical Close is split-adjusted. Independent issuer NAV reconciliation remains unrun.",
+    }
+
+
+def factor_map(exposures, tickers, period, filename):
+    fig, ax = plt.subplots(figsize=(12, 6.5), layout="constrained")
+    values = exposures.set_index("ticker").loc[tickers, FACTORS].to_numpy()
     limit = max(1.0, float(np.abs(values).max()))
     im = ax.imshow(values, cmap="RdBu_r", vmin=-limit, vmax=limit, aspect="auto")
     ax.set_xticks(range(6), FACTORS)
-    ax.set_yticks(range(10), TICKERS)
-    for i in range(10):
+    ax.set_yticks(range(len(tickers)), [SECTORS[t] for t in tickers])
+    for i in range(len(tickers)):
         for j in range(6):
             ax.text(
                 j,
@@ -156,12 +181,21 @@ def figures(exposures, alpha, primary, summary, singular, headline):
                 color="white" if abs(values[i, j]) > limit * 0.65 else "#202020",
             )
     ax.set_title(
-        "Sector labels hide different factor exposures\nFull-sample FF5 + momentum OLS · January 2007–July 2026",
+        f"State Street sector funds: economic factor exposures\nFF5 + momentum OLS · {period}",
         pad=12,
     )
     fig.colorbar(im, ax=ax, label="Economic beta: ETF excess return per unit factor return")
-    fig.savefig(FIGURES / "factor_map.png", bbox_inches="tight")
+    fig.savefig(FIGURES / filename, bbox_inches="tight")
     plt.close(fig)
+
+
+def figures(exposures, alpha, primary, summary, singular, headline):
+    plt.rcParams.update(
+        {"font.size": 10, "axes.spines.top": False, "axes.spines.right": False, "figure.dpi": 140}
+    )
+    factor_map(
+        exposures, TICKERS, "January 2007–July 2026 · original nine sectors", "factor_map.png"
+    )
 
     fig, axs = plt.subplots(1, 2, figsize=(11, 4.4), layout="constrained")
     axs[0].plot(singular.direction, singular.singular_value, "o-", color=COLORS["OLS"])
@@ -204,7 +238,7 @@ def figures(exposures, alpha, primary, summary, singular, headline):
     axs[1].axhline(0, color="#666666", linewidth=0.8)
     axs[1].set(ylabel="Cumulative ridge − OLS squared error (pp²)", title="Below zero favors ridge")
     fig.suptitle(
-        "Frozen exposures × realized factors · January 2012–July 2026\nTen ETFs, 60-month fits; conditional reconstruction, not a tradable forecast"
+        "Frozen exposures × realized factors · January 2012–July 2026\nNine State Street sector funds, 60-month fits; conditional reconstruction"
     )
     fig.savefig(FIGURES / "reconstruction.png", bbox_inches="tight")
     plt.close(fig)
@@ -218,7 +252,7 @@ def figures(exposures, alpha, primary, summary, singular, headline):
         ylabel="RMS monthly change in economic beta", title="Smoothness is a separate objective"
     )
     for label in subset.index:
-        g = primary[(primary.ticker == "IYW") & (primary.model == label)]
+        g = primary[(primary.ticker == "XLK") & (primary.model == label)]
         axs[1].plot(
             pd.PeriodIndex(g.month, freq="M").to_timestamp("M"),
             g["beta_HML"],
@@ -228,19 +262,22 @@ def figures(exposures, alpha, primary, summary, singular, headline):
             linewidth=1.3,
         )
     axs[1].axvline(
-        pd.Timestamp("2021-09-20"), color="#777777", linestyle=":", label="2021 benchmark changes"
+        pd.Timestamp("2018-09-24"),
+        color="#777777",
+        linestyle=":",
+        label="2018 sector reclassification",
     )
     axs[1].set(
-        ylabel="IYW value-factor beta", title="Technology exposure can also change economically"
+        ylabel="Technology: value-factor beta", title="Sector definitions and exposures can change"
     )
     axs[1].legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.18), ncol=2)
     fig.suptitle(
-        "Attribution stability · January 2012–July 2026\nAll six slopes enter the left summary; IYW is a fixed illustrative case"
+        "Attribution stability · January 2012–July 2026\nAll six slopes enter the left summary; Technology is a fixed illustrative case"
     )
     fig.savefig(FIGURES / "stability.png", bbox_inches="tight")
     plt.close(fig)
 
-    fig, ax = plt.subplots(figsize=(9, 5.5), layout="constrained")
+    fig, ax = plt.subplots(figsize=(11, 5.5), layout="constrained")
     a = alpha.set_index("ticker").loc[TICKERS]
     pos = np.arange(len(a))
     ax.errorbar(
@@ -252,7 +289,7 @@ def figures(exposures, alpha, primary, summary, singular, headline):
         color=COLORS["OLS"],
     )
     ax.axvline(0, color="#777777", linewidth=0.8)
-    ax.set_yticks(pos, TICKERS)
+    ax.set_yticks(pos, [SECTORS[t] for t in TICKERS])
     ax.invert_yaxis()
     ax.set(
         xlabel="12 × monthly intercept (%) · pointwise 95% HAC interval",
@@ -268,6 +305,7 @@ def main():
     (RESULTS / "private").mkdir(exist_ok=True)
     x, y, audit = load_panel()
     write_json(audit, RESULTS / "data_audit.json")
+    write_json(corporate_action_diagnostic(), RESULTS / "corporate_action_audit.json")
     exposure_rows, alpha_rows = [], []
     for ticker in TICKERS:
         fit = fit_factor_model(x.to_numpy(), y[ticker].to_numpy())
@@ -276,6 +314,7 @@ def main():
         exposure_rows.append(
             {
                 "ticker": ticker,
+                "sector": SECTORS[ticker],
                 **dict(zip(FACTORS, fit.beta, strict=True)),
                 "r_squared": float(
                     1 - residual @ residual / np.sum((y[ticker] - y[ticker].mean()) ** 2)
@@ -286,6 +325,7 @@ def main():
         alpha_rows.append(
             {
                 "ticker": ticker,
+                "sector": SECTORS[ticker],
                 "alpha_arithmetic_annual_pct": float(inference.coefficients[0] * 1200),
                 "se_arithmetic_annual_pct": float(inference.standard_errors[0] * 1200),
                 "p_value": float(inference.p_values[0]),
@@ -309,6 +349,7 @@ def main():
     csv(summary, "model_summary.csv")
     by_etf = primary.groupby(["ticker", "model"], as_index=False).squared_error_pp2.mean()
     by_etf["rmse_pct_monthly"] = np.sqrt(by_etf.squared_error_pp2)
+    by_etf.insert(1, "sector", by_etf.ticker.map(SECTORS))
     csv(by_etf, "sector_errors.csv")
     csv(summarize(all60), "estimator_sensitivity.csv")
     head = comparison(primary)
@@ -358,6 +399,48 @@ def main():
     )
     write_json(head, RESULTS / "headline.json")
     figures(exposures, alpha, primary, summary, singular, head)
+    extended_x, extended_y, extended_audit = load_panel(extended=True)
+    write_json(extended_audit, RESULTS / "extended_data_audit.json")
+    extended_exposures = []
+    for ticker in ALL_TICKERS:
+        fit = fit_factor_model(extended_x.to_numpy(), extended_y[ticker].to_numpy())
+        extended_exposures.append(
+            {
+                "ticker": ticker,
+                "sector": SECTORS[ticker],
+                **dict(zip(FACTORS, fit.beta, strict=True)),
+            }
+        )
+    extended_exposures = pd.DataFrame(extended_exposures)
+    csv(extended_exposures, "extended_exposures.csv")
+    factor_map(
+        extended_exposures,
+        ALL_TICKERS,
+        "July 2018–July 2026 · all eleven sectors",
+        "extended_factor_map.png",
+    )
+    extended_paths = rolling_reconstruction(extended_x, extended_y)
+    extended_paths.to_csv(
+        RESULTS / "private/extended_rolling_60.csv", index=False, lineterminator="\n"
+    )
+    recent_nine = extended_paths[extended_paths.ticker.isin(TICKERS)]
+    extended_summary = pd.concat(
+        [
+            summarize(extended_paths).assign(universe="All eleven sectors"),
+            summarize(recent_nine).assign(universe="Original nine on the same recent dates"),
+        ],
+        ignore_index=True,
+    )
+    csv(extended_summary, "extended_summary.csv")
+    extended_headline = {
+        **comparison(extended_paths),
+        "sample_months": len(extended_x),
+        "sector_count": len(ALL_TICKERS),
+        "evaluation_months": extended_paths.month.nunique(),
+        "recent_nine": comparison(recent_nine),
+        "interpretation": "Supporting shorter sample: only 37 evaluation months; no replacement of primary result",
+    }
+    write_json(extended_headline, RESULTS / "extended_headline.json")
     outcome = (
         "supports lower conditional reconstruction error"
         if head["upper95"] < 0
@@ -377,7 +460,7 @@ These are historical reconstruction errors, not strategy returns.
 
 ## Common experiment
 
-Ten original broad iShares funds, 235 monthly returns from January 2007 to July 2026;
+Nine original State Street sector funds, 235 monthly returns from January 2007 to July 2026;
 60-month rolling fits leave {head["evaluation_months"]} evaluation months, January 2012–July 2026.
 The revised factor files and adjusted prices are a single retrospective vintage.
 Each target month's realized factors enter its reconstruction; no before-month factor
@@ -409,13 +492,34 @@ under a new structural break.
 
 ## Intercepts and economic interpretation
 
-{head["holm_rejections_5pct"]} of ten full-sample OLS intercepts have Holm-adjusted
+{head["holm_rejections_5pct"]} of nine full-sample OLS intercepts have Holm-adjusted
 p-values below 0.05. The [complete table](../research/results/alpha.csv) includes annual
 arithmetic intercepts, six-lag HAC standard errors, pointwise intervals and adjusted
 p-values. Annualization here is 12 times a monthly coefficient, not a compounded return.
 Ridge coefficients receive no reused OLS p-values. An intercept is conditional on this
 factor model, constant-beta approximation, source vintage and selected ETF universe;
 it does not establish manager skill, mispricing or implementable hedged profit.
+
+## All eleven sectors, with their actual history
+
+The shorter supplement adds Real Estate and Communication Services from their common
+available window, July 2018–July 2026. Its 97 return months leave only **37 evaluation
+months**, July 2023–July 2026, after the unchanged 60-month fit. No fund is backfilled.
+The [eleven-sector exposure map](../research/figures/extended_factor_map.png) is descriptive.
+The nine-sector headline above retains the longer sample and is not interchangeable
+with this shorter result.
+
+The supplemental ridge-minus-OLS MSE difference is **{extended_headline["estimate"]:.4f} pp²**,
+95% block interval **[{extended_headline["lower95"]:.4f}, {extended_headline["upper95"]:.4f}]**.
+Only about three 12-month blocks are represented; precision and dependence estimation
+are limited. The original nine scored on these same recent dates have a difference
+of **{extended_headline["recent_nine"]["estimate"]:.4f} pp²**. The
+[complete supplemental summaries](../research/results/extended_summary.csv) separate
+changing the evaluation period from adding two sectors; neither is a new primary test.
+
+The universe change follows the user's issuer preference after viewing the initial
+iShares results. The previous study is preserved on
+[`ishares-study`](https://github.com/QuhiQuhihi/Famma-French-Factors-with-Sector-ETF/tree/ishares-study).
 
 ## What would change the assessment?
 

@@ -33,14 +33,25 @@ not whichever file a provider serves when a reader next downloads it.
   transition affects the source construction, and RF changes provider in June
   2024. Fund benchmarks also change over time. A frozen download makes a numerical
   result repeatable without making it point-in-time data.
-- The ten retained iShares funds are a selected surviving sample. Their sector
-  labels neither partition the whole equity market nor stay economically identical
-  through every benchmark change.
+- The primary sample contains the original nine State Street Select Sector funds.
+  Real Estate and Communication Services enter a separate eleven-fund extension
+  beginning in July 2018. Their pre-inception history is never filled. Current
+  sector labels do not erase the 2016 and 2018 reclassifications.
+- Financials' September 2016 distribution of Real Estate shares is a corporate
+  action, not simply a negative investment return. The adjusted-price series is
+  used without adding the distribution a second time. Vendor adjustments remain
+  an input dependency; issuer-NAV reconciliation is not implied.
 
 The study evaluates return reconstruction conditional on realized factor returns.
 It does not simulate an investor who knew those returns before the month began.
 
-## Updating a vintage
+## State Street amendment and later updates
+
+The switch from iShares to State Street reuses the exact pinned French factor ZIP
+vintage and acquires a separately recorded ETF panel. The earlier full study remains
+on branch `ishares-study` at `5926897`; `research/input_manifest_ishares.json` retains
+its source metadata. That earlier result had been observed before this change of
+universe, so the State Street version is not presented as an untouched experiment.
 
 Acquisition verifies existing pins and fails if their contents differ. An intentional
 refresh requires a dated amendment, a separate recorded input vintage, and rerun

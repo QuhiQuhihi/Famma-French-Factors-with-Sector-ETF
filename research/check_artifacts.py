@@ -10,7 +10,7 @@ import nbformat
 import numpy as np
 import pandas as pd
 
-from research.data import FACTORS, ROOT, TICKERS, digest, load_panel
+from research.data import ALL_TICKERS, FACTORS, RAW, ROOT, SECTORS, TICKERS, digest, load_panel
 
 
 def verify_manifest(path, full=False):
@@ -101,7 +101,7 @@ def full_reconciliation():
     errors = ((paths.actual - paths.prediction) * 100) ** 2
     np.testing.assert_allclose(errors, paths.squared_error_pp2, rtol=1e-11, atol=1e-10)
     # Independently use raw-coordinate least squares and direct ridge equations.
-    for month, ticker in [("2012-01", "IYW"), ("2020-03", "IYE"), ("2026-07", "IYC")]:
+    for month, ticker in [("2012-01", "XLK"), ("2020-03", "XLE"), ("2026-07", "XLY")]:
         pos = x.index.get_loc(pd.Period(month, freq="M"))
         train = x.iloc[pos - 60 : pos].to_numpy()
         response = y[ticker].iloc[pos - 60 : pos].to_numpy()
@@ -144,6 +144,68 @@ def full_reconciliation():
         np.testing.assert_allclose(
             beta[1:], exposures.loc[ticker, FACTORS].to_numpy(dtype=float), atol=1e-10
         )
+        assert exposures.loc[ticker, "sector"] == SECTORS[ticker]
+    ex, ey, extended_audit = load_panel(extended=True)
+    assert extended_audit == json.loads(
+        (ROOT / "research/results/extended_data_audit.json").read_text()
+    )
+    assert len(ex) == 97 and list(ey.columns) == ALL_TICKERS
+    extension = pd.read_csv(ROOT / "research/results/private/extended_rolling_60.csv")
+    assert extension.month.nunique() == 37
+    assert extension.month.min() == "2023-07"
+    assert not extension.duplicated(["month", "ticker", "model"]).any()
+    assert extension.groupby(["month", "model"]).ticker.nunique().eq(11).all()
+    extended_target = pd.PeriodIndex(extension.month, freq="M")
+    assert (pd.PeriodIndex(extension.train_end, freq="M") == extended_target - 1).all()
+    assert (pd.PeriodIndex(extension.train_start, freq="M") == extended_target - 60).all()
+    np.testing.assert_allclose(
+        ((extension.actual - extension.prediction) * 100) ** 2,
+        extension.squared_error_pp2,
+        atol=1e-10,
+    )
+    observed = ey.stack().rename("expected_actual")
+    observed.index = observed.index.set_names(["month", "ticker"])
+    observed = observed.reset_index()
+    observed["month"] = observed.month.astype(str)
+    joined = extension.merge(observed, on=["month", "ticker"], validate="many_to_one")
+    assert len(joined) == len(extension)
+    np.testing.assert_allclose(joined.actual, joined.expected_actual, atol=1e-12)
+    # On the same recent dates the original nine must receive identical fits:
+    # adding other targets cannot change their independent regressions.
+    recent = extension[extension.ticker.isin(TICKERS)].merge(
+        paths, on=["month", "ticker", "model"], validate="one_to_one", suffixes=("_ext", "_long")
+    )
+    assert len(recent) == 37 * 9 * 5
+    np.testing.assert_allclose(recent.prediction_ext, recent.prediction_long, atol=1e-12)
+    extended_head = json.loads((ROOT / "research/results/extended_headline.json").read_text())
+    for tickers, result in [(ALL_TICKERS, extended_head), (TICKERS, extended_head["recent_nine"])]:
+        subset = extension[extension.ticker.isin(tickers)]
+        monthly = subset.groupby(["month", "model"]).squared_error_pp2.mean().unstack()
+        differences = (monthly["Ridge 0.1"] - monthly.OLS).to_numpy()
+        np.testing.assert_allclose(differences.mean(), result["estimate"], atol=1e-10)
+        starts = np.random.default_rng(20260920).integers(0, 37, size=(2000, 4))
+        values = [
+            differences[np.concatenate([np.arange(s, s + 12) % 37 for s in row])[:37]].mean()
+            for row in starts
+        ]
+        np.testing.assert_allclose(
+            np.quantile(values, [0.025, 0.975]), [result["lower95"], result["upper95"]], atol=1e-10
+        )
+    expanded = pd.read_csv(ROOT / "research/results/extended_exposures.csv").set_index("ticker")
+    for ticker in ALL_TICKERS:
+        direct = np.linalg.lstsq(np.column_stack([np.ones(len(ex)), ex]), ey[ticker], rcond=None)[0]
+        np.testing.assert_allclose(
+            direct[1:], expanded.loc[ticker, FACTORS].to_numpy(dtype=float), atol=1e-10
+        )
+        assert expanded.loc[ticker, "sector"] == SECTORS[ticker]
+    event = pd.read_csv(RAW / "XLF_2016_event.csv", index_col=0)
+    event_audit = json.loads((ROOT / "research/results/corporate_action_audit.json").read_text())
+    np.testing.assert_allclose(
+        100 * (event.loc["2016-09-19", "Adj Close"] / event.loc["2016-09-16", "Adj Close"] - 1),
+        event_audit["event_adjusted_return_pct"],
+        atol=1e-12,
+    )
+    assert event_audit["manual_distribution_added"] is False
 
 
 def main():

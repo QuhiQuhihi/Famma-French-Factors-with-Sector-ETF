@@ -1,0 +1,12 @@
+{
+  "sector": "Financials",
+  "ticker": "XLF",
+  "event_date": "2016-09-19",
+  "vendor_split_like_factor": 1.231,
+  "provider_close_change_pct": 0.6376333816309199,
+  "event_adjusted_return_pct": 0.6376580261065579,
+  "main_adjusted_return_pct": 0.6376342164608806,
+  "two_downloads_return_difference_bps": 0.002380964567727517,
+  "manual_distribution_added": false,
+  "scope": "Vendor internal consistency only; historical Close is split-adjusted. Independent issuer NAV reconciliation remains unrun."
+}

@@ -12,6 +12,9 @@ The empirical notebooks show bounded summaries and original figures; the teachin
 chapters label constructed observations explicitly.
 
 The original commit `3e275dca416327b8e708b3fdc50e788adf138389` is preserved on `old`.
+The completed iShares revision `5926897c8ac815133e96afb265b39ba25513d9f3` is preserved
+on `ishares-study`, with its original input manifest retained in this tree. The current
+State Street study is an explicit later universe amendment, not a replacement history.
 Original code and saved notebook outputs can therefore be inspected there. Ignoring
 source downloads in the renovated tree does not erase historical notebook excerpts
 or rewrite earlier commits. No full-history privacy or security audit is claimed.
@@ -25,7 +28,7 @@ change warrants a new study. Confirm local instruction files and raw inputs are 
 
 The `renovation` branch carries the research revision, and `main` is the public reading
 version after review. Updates use ordinary commits and fast-forward pushes while
-preserving `old`; no force push or history replacement is needed for this revision.
+preserving `old` and `ishares-study`; no force push or history replacement is needed.
 
 GitHub Actions validates the locked environment, offline numerical tests, saved
 artifacts and three source-free teaching chapters. It does not assert current-vendor

@@ -1,0 +1,11 @@
+model,months,etfs,rmse_pct_monthly,mse_pp2,rms_beta_monthly_change,mean_effective_df_including_intercept,universe
+Market,37,11,3.82236216182,14.6104524961,0.00949339113032,2,All eleven sectors
+FF5,37,11,3.66160932818,13.4073828722,0.0332860863027,6,All eleven sectors
+OLS,37,11,3.66155162307,13.4069602884,0.0355821710276,7,All eleven sectors
+Ridge 0.1,37,11,3.57268980443,12.7641124387,0.0267730780705,6.11753547901,All eleven sectors
+PCR 4,37,11,3.58477301503,12.8505975693,0.0311381130736,5,All eleven sectors
+Market,37,9,3.97551054346,15.8046840811,0.0101672463277,2,Original nine on the same recent dates
+FF5,37,9,3.79907567333,14.4329759717,0.0349121170591,6,Original nine on the same recent dates
+OLS,37,9,3.78708784548,14.3420343494,0.0371350535639,7,Original nine on the same recent dates
+Ridge 0.1,37,9,3.68448181942,13.5754062776,0.027848860454,6.11753547901,Original nine on the same recent dates
+PCR 4,37,9,3.71395297264,13.793446683,0.0319218315402,5,Original nine on the same recent dates
